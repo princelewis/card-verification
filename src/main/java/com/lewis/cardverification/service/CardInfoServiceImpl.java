@@ -13,6 +13,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -70,4 +71,36 @@ public class CardInfoServiceImpl implements CardInfoService {
     private String cutOutFirstSixChar(String cardNumber){
         return cardNumber.substring(0,6);
     }
+
+    private StatResponse cardStat(int start, int limit){
+
+        List<List> sortedCardNumbers = cardInfoRepository.sortByCardNumber();
+
+        int totalSizeOfCheckedCards = sortedCardNumbers.size();
+
+        if (sortedCardNumbers.isEmpty()) {
+            throw new CardInfoServiceException(ErrorMessages.EMPTY_LIST.getErrorMessage());
+        }
+
+        if ((start * limit) > totalSizeOfCheckedCards){
+            throw new CardInfoServiceException(ErrorMessages.OUT_OF_BOUNDS.getErrorMessage());
+
+        }
+
+        int startIndex = ((start * limit) - limit);
+        List<List> rangeArray = sortedCardNumbers.subList(startIndex, (limit + startIndex));
+        System.out.println(rangeArray);
+
+        Map<String, Object> payload = new HashMap<>();
+
+        rangeArray.forEach(list -> {
+            payload.put(list.get(1).toString(), list.get(0));
+        });
+        System.out.println(rangeArray);
+
+
+        return new StatResponse(true, start, limit, totalSizeOfCheckedCards, payload);
+    }
+
+
 }
