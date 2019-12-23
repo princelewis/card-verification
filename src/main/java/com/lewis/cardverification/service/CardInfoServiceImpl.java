@@ -74,6 +74,10 @@ public class CardInfoServiceImpl implements CardInfoService {
 
     private StatResponse cardStat(int start, int limit){
 
+        List<CardInfo> allRequestedCards = cardInfoRepository.findAll();
+
+        int sizeOfRequestedCards = allRequestedCards.size();
+
         List<List> sortedCardNumbers = cardInfoRepository.sortByCardNumber();
 
         int totalSizeOfCheckedCards = sortedCardNumbers.size();
@@ -89,17 +93,17 @@ public class CardInfoServiceImpl implements CardInfoService {
 
         int startIndex = ((start * limit) - limit);
         List<List> rangeArray = sortedCardNumbers.subList(startIndex, (limit + startIndex));
-        System.out.println(rangeArray);
+//        System.out.println(rangeArray);
 
         Map<String, Object> payload = new HashMap<>();
 
         rangeArray.forEach(list -> {
             payload.put(list.get(1).toString(), list.get(0));
         });
-        System.out.println(rangeArray);
 
 
-        return new StatResponse(true, start, limit, totalSizeOfCheckedCards, payload);
+
+        return new StatResponse(true, start, limit, sizeOfRequestedCards, payload);
     }
 
 
