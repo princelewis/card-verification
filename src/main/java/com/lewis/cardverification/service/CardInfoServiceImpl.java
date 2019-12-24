@@ -19,15 +19,16 @@ import java.util.Map;
 @Service
 public class CardInfoServiceImpl implements CardInfoService {
 
+    @Autowired
     private CardInfoRepository cardInfoRepository;
-
+    @Autowired
     private RestTemplate restTemplate;
 
-    @Autowired
-    public CardInfoServiceImpl(CardInfoRepository cardInfoRepository, RestTemplate restTemplate){
-        this.cardInfoRepository = cardInfoRepository;
-        this.restTemplate = restTemplate;
-    }
+//    @Autowired
+//    public CardInfoServiceImpl(CardInfoRepository cardInfoRepository, RestTemplate restTemplate){
+//        this.cardInfoRepository = cardInfoRepository;
+//        this.restTemplate = restTemplate;
+//    }
 
     @Override
     public InfoResponse getCardInfo(String cardNumber) {
@@ -40,6 +41,7 @@ public class CardInfoServiceImpl implements CardInfoService {
         return cardStat(start, limit);
     }
 
+
     private InfoResponse cardInfo(String cardNumber) throws RestClientException {
 
         if (cardNumber.length() < 6) {
@@ -50,8 +52,10 @@ public class CardInfoServiceImpl implements CardInfoService {
 
         Map<String, Object> payload = new HashMap<>();
 
-
+        System.out.println(newCardNumber);
         ResponsePojo thirdPartyApiResponse = restTemplate.getForObject("https://lookup.binlist.net/" + newCardNumber, ResponsePojo.class);
+
+        System.out.println(thirdPartyApiResponse.getScheme());
 
         if(thirdPartyApiResponse == null){
             throw new CardInfoServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
@@ -59,11 +63,11 @@ public class CardInfoServiceImpl implements CardInfoService {
 
         CardInfo cardInfoEntity = new CardInfo(thirdPartyApiResponse.getType(), thirdPartyApiResponse.getScheme(), thirdPartyApiResponse.getBank().getName(), newCardNumber, true);
 
-        CardInfo savedDetails = cardInfoRepository.save(cardInfoEntity);
+        cardInfoRepository.save(cardInfoEntity);
 
-        payload.put("scheme", savedDetails.getScheme());
-        payload.put("type", savedDetails.getCardType());
-        payload.put("bank", savedDetails.getBank());
+        payload.put("scheme", cardInfoEntity.getScheme());
+        payload.put("type", cardInfoEntity.getCardType());
+        payload.put("bank", cardInfoEntity.getBank());
 
         return new InfoResponse(true, payload);
     }
